@@ -1,5 +1,5 @@
 %% PlotRTL1090
-%  Recording and 3D rendering dump1090  air traffic information
+%  3D visualization of air traffic through RTL-SDR (dump1090) and MATLAB
 %  Copyright (C) 2014  Jorge Garcia Tiscar
 % 
 %  This program is free software: you can redistribute it and/or modify
@@ -21,10 +21,10 @@ else
 end
 
 %% Acquisition loop
-while true
+while true % adjust duration here or stop with Ctrl+C
 
     % Get data from server
-    data   = urlread('http://rpi.wechoosethemoon.es:8080/data.json');
+    data   = urlread('http://urlofthedump1090server:8080/data.json');
     planes = fromjson(data); % https://github.com/christianpanton/matlab-json
     
     % Parse data
@@ -48,23 +48,24 @@ while true
     pause(1)
 end
 
-%% Plot
+%---------------------------------------------------- After stopping the loop execute the following:
+
+%% Render the recorded data
 % Prepare figure
 load   coords %#ok<*UNRCH>
 close  all
-opengl software
+opengl software % Hardware OpenGL rendering is unreliable for exporting images
 figure('Renderer','opengl',...
        'DefaultTextFontName', 'Miryad Pro', ...
        'DefaultTextFontSize', 10,...
        'DefaultTextHorizontalAlignment', 'right')
 
-% Settings               % alt < 5000;
-filter    = alt < 80000; % cellfun(@(x) ~isempty(regexpi(x,'^RYR.*$')),flg);
-centerLoc = [39.489233,-0.478026];% LEVC: 39.489233,-0.478026         
-lineColor = [0.7,0.7,0.7];        % EHAM: 52.317216,4.749005
-vertiExag = 5;
+% Settings
+centerLoc = [39.489233,-0.478026]; % LEVC
+lineColor = [0.7,0.7,0.7];
+vertiExag = 5; % vertical exaggeration
 markSize  = 21;
-markColor = alt;
+maxRadius = 200e3; % bullseye max radius (m)
 hold on
 
 % Prepare UTM scenario
@@ -72,13 +73,15 @@ mstruct      = defaultm('utm');
 mstruct.zone = utmzone(centerLoc(1),centerLoc(2));
 mstruct      = defaultm(mstruct);
 
-% Plot land contour
-% http://www.naturalearthdata.com/downloads/10m-cultural-vectors/
+% Plot land contours
+% SHPs from Natural Earth: http://www.naturalearthdata.com/downloads/10m-cultural-vectors/
 SHPdir    = '.\SHPs\';
 % Change 'es' for the ISO_A2 code of your country
+% For all countries delete selector or input non-existent field (ISO_A2 => foo)
 countries = shaperead([SHPdir '10m_cultural\ne_10m_admin_0_countries.shp'],...
             'Selector',{@(x) strcmpi(x,'es'),'ISO_A2'},'UseGeoCoords', true);
-% For all provinces: @(x) strcmpi(x,'ES.VC') => @(x) ~isempty(regexpi(x,'^NL.*$'))
+% Change 'ES.VC' for the provinces/states of your preference or use a RegExp
+% for all provinces: @(x) strcmpi(x,'ES.VC') => @(x) ~isempty(regexpi(x,'^ES.*$'))
 provinces = shaperead([SHPdir '10m_cultural\ne_10m_admin_1_states_provinces.shp'],...
             'Selector',{@(x) strcmpi(x,'ES.VC'),'region_cod'},'UseGeoCoords', true);
 [x,y]     = mfwdtran(mstruct,[countries.Lat provinces.Lat],[countries.Lon provinces.Lon]);
@@ -87,7 +90,7 @@ plot(x,y,'-k')
 
 % Plot bullseye
 t = linspace(0,2*pi);
-for i = 0:50e3:200e3
+for i = 0:50e3:maxRadius
     plot(xc+i.*cos(t),yc+i.*sin(t),'-','color',lineColor)
     if i>0
         text(xc+i-15e3, yc-15e3, [num2str(i/1e3) 'km'],'color',lineColor,'HorizontalAlignment','center');
@@ -99,27 +102,31 @@ plot([xc xc],[yc-i-10e3 yc+i+10e3],'-','color',lineColor)
 plot([xc-i-10e3 xc+i+10e3],[yc yc],'-','color',lineColor)
 
 % Plot traces
+filter    = alt < 150000; % You can filter per altitude (feet), speed, etc.
+                          % To filter per airline use a cell function:
+                          % For Ryanair: filter = cellfun(@(x) ~isempty(regexpi(x,'^RYR.*$')),flg);
+color     = alt; % Color by altitude or by speed, squawk... 
 [x,y]     = mfwdtran(mstruct,lat(filter),lon(filter));
-scatter3(x,y,vertiExag.*alt(filter).*0.3048,markSize,markColor(filter),'Marker','.')
+scatter3(x(filter),y(filter),vertiExag.*alt(filter).*0.3048,markSize,color(filter),'Marker','.')
 
-% Final figure settings
+% Some more figure settings
 axis equal
-extra = 40e3;
+extra     = 40e3; % some extra space around the bullseye
 axis([xc-i-extra xc+i+extra yc-i-extra yc+i+extra])
 set(gcf, 'Color', 'white');
 axis off
 
 % Prepare 3D view
-pos = [0, 0, 1282, floor(722/0.8)];
+pos       = [0, 0, 856, floor(482/0.8)]; % This gives a 854 x 480 mp4/gif whith the selected cropping
 set(gcf, 'Position', pos);
 axis vis3d
-view(-7,26)
-camzoom(1.65)
+view(-7,26) % Some fiddling required!
+camzoom(1.65) % Same here!
 set(gca, 'LooseInset', [0,0,0,0]);
 
 % Prepare animation
-filename  = 'plot1090_3D_large';
-duration  = 8; % Adjust at will!
+filename  = 'plot1090_3D';
+duration  = 7; % Adjust at will!
 frameRate = 25; 
 
 % Prepare MP4
@@ -139,7 +146,7 @@ for i = 1:frames
 
   % Move camera
   camorbit(360/frames,0,'data',[0 0 1])
-  frame = getframe(gcf,pos-[0 0 0 round(0.2*pos(4))]); % Cropping as needed (top %20)
+  frame = getframe(gcf,pos-[0 0 0 round(0.2*pos(4))]); % Cropping as needed (top 20% here)
   
   % Write GIF
   im = frame2im(frame);
@@ -154,11 +161,5 @@ for i = 1:frames
   writeVideo(myVideo,frame);
 end
 close(myVideo);
-% https://gfycat.com/PartialFaithfulAnt
-% http://gfycat.com/delete/BlindQueasyEastsiberianlaika
 
-% https://gfycat.com/LankyPoisedAmmonite
-% http://gfycat.com/delete/AliveWhichJohndory
-
-% https://gfycat.com/MintyUnsungEmperorshrimp
-% http://gfycat.com/delete/UniformQueasyBison
+% This is the end...
