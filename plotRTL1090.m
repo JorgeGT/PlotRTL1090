@@ -78,11 +78,11 @@ mstruct      = defaultm(mstruct);
 SHPdir    = '.\SHPs\';
 % Change 'es' for the ISO_A2 code of your country
 % For all countries delete selector or input non-existent field (ISO_A2 => foo)
-countries = shaperead([SHPdir '10m_cultural\ne_10m_admin_0_countries.shp'],...
+countries = shaperead([SHPdir 'ne_10m_admin_0_countries.shp'],...
             'Selector',{@(x) strcmpi(x,'es'),'ISO_A2'},'UseGeoCoords', true);
 % Change 'ES.VC' for the provinces/states of your preference or use a RegExp
 % for all provinces: @(x) strcmpi(x,'ES.VC') => @(x) ~isempty(regexpi(x,'^ES.*$'))
-provinces = shaperead([SHPdir '10m_cultural\ne_10m_admin_1_states_provinces.shp'],...
+provinces = shaperead([SHPdir 'ne_10m_admin_1_states_provinces.shp'],...
             'Selector',{@(x) strcmpi(x,'ES.VC'),'region_cod'},'UseGeoCoords', true);
 [x,y]     = mfwdtran(mstruct,[countries.Lat provinces.Lat],[countries.Lon provinces.Lon]);
 [xc,yc]   = mfwdtran(mstruct,centerLoc(1),centerLoc(2));
