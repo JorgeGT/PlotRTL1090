@@ -42,6 +42,12 @@ filter = cellfun(@(x) ~isempty(regexpi(x,'^RYR.*$')),flg);
 
 > Tip: you can concatenate logical expressions in the filter! You could for example select only Ryanair flights operating under 5000 ft by making `filter = cellfun(@(x) ~isempty(regexpi(x,'^RYR.*$')),flg) & alt < 6000;`. Any combination of altitude, speed, position, callsign, etc. is available!
 
+Acknowledgements
+---
+* Antirez for [`dump1090`](https://github.com/antirez/dump1090).
+* Christianpanton for the included [`matlab-json`](https://github.com/christianpanton/matlab-json) function.
+* [Natural Earth](http://www.naturalearthdata.com/) for releasing the included shapefiles as public domain.
+
 Licensing
 ---
 This code is licensed under GPL v3.
