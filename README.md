@@ -10,8 +10,8 @@ The code is provided on a single file for convenience, but the actual use is div
 
 Requirements
 ---
-A server running [`dump1090`](https://github.com/antirez/dump1090) to record ADS-B data. For those who don't have (yet!) an RTL-SDR dongle available, two sample datasets are provided to test the code. Those have been used to generate the renders shown on the following section. 
-
+* A server running [`dump1090`](https://github.com/antirez/dump1090) to record ADS-B data. For those who don't have (yet!) an RTL-SDR dongle available, two sample datasets are provided to test the code. Those have been used to generate the renders shown on the following section. 
+* MATLAB (tested on 2012b and 2014a)
 
 Example results
 ---
