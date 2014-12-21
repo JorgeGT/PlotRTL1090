@@ -4,7 +4,7 @@ PlotRTL1090
 
 Summary
 ---
-PlotRTL1090 is a simple MATLAB routine to record and visualize air traffic. It makes use of the excellent [`dump1090`](https://github.com/antirez/dump1090) by @antirez which profits from the ability of a ~$6 USB DTV receptor (RTL-SDR) to relay raw radio data along a wide spectrum, including the 1090 MHz frequency in which aircraft broadcast ADS-B messages indicating their callsign, altitude, speed, position, etc.
+PlotRTL1090 is a simple MATLAB routine to record and visualize air traffic. It makes use of the excellent [`dump1090`](https://github.com/MalcolmRobb/dump1090), forked by MalcolmRobb from antirez which profits from the ability of a ~$6 USB DTV receptor (RTL-SDR) to relay raw radio data along a wide spectrum, including the 1090 MHz frequency in which aircraft broadcast ADS-B messages indicating their callsign, altitude, speed, position, etc.
 
 The code is provided on a single file for convenience, but the actual use is divided in two phases. The first portion of the code contains a loop that polls a running [`dump1090`](https://github.com/antirez/dump1090) server (or forks!) to read the JSON transcript of decoded ADS-B messages and store them in a `.mat` file. You can resume this loop at any time to collect additional data (which will be timestamped for your convenience). When enough data is recorded, you can execute the second code cell to render the data into a 3D visualization (which will be also saved as a `.gif` and `.mp4`).
 
@@ -44,7 +44,7 @@ filter = cellfun(@(x) ~isempty(regexpi(x,'^RYR.*$')),flg);
 
 Acknowledgements
 ---
-* Antirez for [`dump1090`](https://github.com/antirez/dump1090).
+* Antirez and MalcolmRobb for [`dump1090`](https://github.com/MalcolmRobb/dump1090).
 * Christianpanton for the included [`matlab-json`](https://github.com/christianpanton/matlab-json) function.
 * [Natural Earth](http://www.naturalearthdata.com/) for releasing the included shapefiles as public domain.
 
